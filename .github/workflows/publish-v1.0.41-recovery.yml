@@ -28,10 +28,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if gh release view v1.0.41 >/dev/null 2>&1; then
-            gh release upload v1.0.41 ContrachequeIA-v1.0.41.apk --clobber
+          REPO="achouofertasoficial-commits/contracheque-ia-releases"
+          if gh release view v1.0.41 --repo "$REPO" >/dev/null 2>&1; then
+            gh release upload v1.0.41 ContrachequeIA-v1.0.41.apk --repo "$REPO" --clobber
           else
             gh release create v1.0.41 ContrachequeIA-v1.0.41.apk \
+              --repo "$REPO" \
               --title "Contracheque IA v1.0.41" \
               --notes "Nova identidade visual com ícone de infinito, splash e tela de login renovada."
           fi
