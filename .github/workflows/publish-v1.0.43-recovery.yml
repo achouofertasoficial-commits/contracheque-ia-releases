@@ -1,0 +1,39 @@
+name: Publish v1.0.43 recovery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-v1.0.43-recovery.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download validated build artifact
+        env:
+          ARTIFACT_URL: 'https://sdmntprbrazilsouth.oaiusercontent.com/files/00000000-5710-820e-acc8-3604220ee533/raw?se=2026-10-31T23%3A28%3A50Z&sp=r&sv=2026-02-06&sr=b&scid=92a416e0-c41d-5410-a94c-15777bde9303&skoid=9fcafdab-1a9a-48a1-833e-6f0dce81fc66&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-10-31T02%3A00%3A22Z&ske=2026-11-01T02%3A00%3A22Z&sks=b&skv=2026-02-06&sig=ZYhusmhWAG5tQkfImHs/6SVu7Alx2o0gPveH7WHEsOw%3D'
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 "$ARTIFACT_URL" -o artifact.zip
+          unzip -q artifact.zip
+          test -f ContrachequeIA-v1.0.43.apk
+          echo "d6fec40abce7fd97e36570682519ef04407ac7d3c8d4f1d8e9a5b3dadff3b55d  ContrachequeIA-v1.0.43.apk" | sha256sum -c -
+
+      - name: Publish public release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          REPO="achouofertasoficial-commits/contracheque-ia-releases"
+          if gh release view v1.0.43 --repo "$REPO" >/dev/null 2>&1; then
+            gh release upload v1.0.43 ContrachequeIA-v1.0.43.apk --repo "$REPO" --clobber
+          else
+            gh release create v1.0.43 ContrachequeIA-v1.0.43.apk \
+              --repo "$REPO" \
+              --title "Contracheque IA v1.0.43" \
+              --notes "Ajusta o novo splash para permanecer visível por 10 segundos exatos antes de abrir o aplicativo."
+          fi
