@@ -1,0 +1,37 @@
+name: Publish v1.0.41 recovery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-v1.0.41-recovery.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download validated build artifact
+        env:
+          ARTIFACT_URL: 'https://sdmntprbrazilsouth.oaiusercontent.com/files/00000000-597c-820e-a43b-809846565db1/raw?se=2026-10-31T16%3A44%3A37Z&sp=r&sv=2026-02-06&sr=b&scid=eb1dee7b-2684-5549-8467-8a183c614acb&skoid=9fcafdab-1a9a-48a1-833e-6f0dce81fc66&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-10-31T11%3A43%3A19Z&ske=2026-11-01T11%3A43%3A19Z&sks=b&skv=2026-02-06&sig=lIauGsfwvWiEgolYeAcvZNdZF94dWvInbsDNPYDsReg%3D'
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 "$ARTIFACT_URL" -o artifact.zip
+          unzip -q artifact.zip
+          test -f ContrachequeIA-v1.0.41.apk
+          echo "7c6ffd2ba3127ac25e4e43a200baffbd8d764b73a06f135e72428ad1e3381641  ContrachequeIA-v1.0.41.apk" | sha256sum -c -
+
+      - name: Publish public release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view v1.0.41 >/dev/null 2>&1; then
+            gh release upload v1.0.41 ContrachequeIA-v1.0.41.apk --clobber
+          else
+            gh release create v1.0.41 ContrachequeIA-v1.0.41.apk \
+              --title "Contracheque IA v1.0.41" \
+              --notes "Nova identidade visual com ícone de infinito, splash e tela de login renovada."
+          fi
