@@ -1,0 +1,39 @@
+name: Publish v1.0.44 recovery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-v1.0.44-recovery.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download validated build artifact
+        env:
+          ARTIFACT_URL: 'https://sdmntprbrazilsouth.oaiusercontent.com/files/00000000-db6c-820e-b7f1-43e076fcc44d/raw?se=2026-11-01T08%3A28%3A20Z&sp=r&sv=2026-02-06&sr=b&scid=2b62877f-0ea4-5a72-89a9-c820412ebaba&skoid=9fcafdab-1a9a-48a1-833e-6f0dce81fc66&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-01T00%3A58%3A48Z&ske=2026-11-02T00%3A58%3A48Z&sks=b&skv=2026-02-06&sig=oUCO5bq3WZGEVKJpHWCgdmaU/8HlJRFn8ckWAk7B0uw%3D'
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 "$ARTIFACT_URL" -o artifact.zip
+          unzip -q artifact.zip
+          test -f ContrachequeIA-v1.0.44.apk
+          echo "05d7bf1b95f71137eb7ed341f8fcc2c03bdaa829bd495e40c8177a4a6d126107  ContrachequeIA-v1.0.44.apk" | sha256sum -c -
+
+      - name: Publish public release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          REPO="achouofertasoficial-commits/contracheque-ia-releases"
+          if gh release view v1.0.44 --repo "$REPO" >/dev/null 2>&1; then
+            gh release upload v1.0.44 ContrachequeIA-v1.0.44.apk --repo "$REPO" --clobber
+          else
+            gh release create v1.0.44 ContrachequeIA-v1.0.44.apk \
+              --repo "$REPO" \
+              --title "Contracheque IA v1.0.44" \
+              --notes "Refina o ícone do aplicativo: símbolo de infinito menor, mais uniforme e com cortes/detalhes internos discretos."
+          fi
